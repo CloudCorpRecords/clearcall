@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClearCall — Is This Message a Scam? A checker built for seniors</title>
+<meta name="description" content="Paste any text, email, or letter. ClearCall checks it for known scam patterns, explains every warning in plain language, and tells you exactly what to do next. Everything stays on your device.">
+<style>
+  :root{
+    --ink:#17202b; --paper:#fffdf7; --card:#ffffff; --line:#d8d2c4;
+    --blue:#1456a0; --blue-dark:#0d3d73; --green:#177245; --amber:#9a6200; --red:#b42318;
+    --green-bg:#e7f6ec; --amber-bg:#fdf3d8; --red-bg:#fdeceb; --grey-bg:#f1efe9;
+    --radius:16px; --font-size:20px;
+  }
+  *{box-sizing:border-box}
+  html{font-size:var(--font-size)}
+  body{margin:0;font-family:Verdana,Geneva,Tahoma,sans-serif;background:var(--paper);color:var(--ink);line-height:1.55}
+  body.large-text{--font-size:23px}
+  header{background:var(--blue-dark);color:#fff;padding:1.2rem 1rem}
+  .wrap{max-width:880px;margin:0 auto;padding:0 1rem}
+  header .wrap{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;justify-content:space-between}
+  h1{font-size:1.7rem;margin:.1rem 0}
+  header p{margin:.15rem 0;max-width:34rem;font-size:.92rem}
+  .badge{background:#fff;color:var(--blue-dark);font-weight:bold;border-radius:999px;padding:.25rem .7rem;font-size:.75rem}
+  main{padding:1.2rem 0 2.5rem}
+  .card{background:var(--card);border:2px solid var(--line);border-radius:var(--radius);padding:1.1rem;margin-bottom:1.1rem}
+  label{font-weight:bold;display:block;margin-bottom:.5rem}
+  textarea{width:100%;min-height:170px;font:inherit;padding:.8rem;border:2px solid var(--ink);border-radius:12px;background:#fff}
+  textarea:focus,button:focus,a:focus{outline:4px solid #f5c542;outline-offset:2px}
+  .row{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.8rem}
+  button{font:inherit;font-weight:bold;border-radius:12px;border:2px solid var(--blue-dark);padding:.7rem 1.2rem;cursor:pointer;background:var(--blue);color:#fff}
+  button.secondary{background:#fff;color:var(--blue-dark)}
+  button:active{transform:translateY(1px)}
+  .samples button{background:#fff;color:var(--ink);border-color:var(--ink);font-weight:normal;font-size:.85rem;text-align:left}
+  #result{display:none}
+  #result.show{display:block}
+  .verdict{border-radius:12px;padding:1rem;font-size:1.15rem;font-weight:bold}
+  .verdict.likely-scam{background:var(--red-bg);border:3px solid var(--red);color:var(--red)}
+  .verdict.caution{background:var(--amber-bg);border:3px solid var(--amber);color:#6d4500}
+  .verdict.low{background:var(--grey-bg);border:3px solid #6b7280}
+  .verdict.no-flags,.verdict.too-short{background:var(--green-bg);border:3px solid var(--green);color:var(--green)}
+  .score{font-size:.9rem;font-weight:normal;margin-top:.3rem;color:var(--ink)}
+  .meter{height:22px;background:#e5e0d2;border-radius:999px;overflow:hidden;margin:.6rem 0}
+  .meter > div{height:100%;width:0%;background:var(--green);transition:width .5s}
+  .flag{border-left:8px solid var(--amber);background:#fffaf0;padding:.7rem .9rem;margin:.6rem 0;border-radius:0 10px 10px 0}
+  .flag strong{display:block}
+  .flag p{margin:.25rem 0 0;font-size:.88rem}
+  .ok{background:var(--green-bg);border-radius:10px;padding:.6rem .9rem;margin:.5rem 0;font-size:.9rem}
+  .steps li{margin:.45rem 0}
+  .toolbar{display:flex;flex-wrap:wrap;gap:.5rem}
+  .toolbar button{font-size:.82rem;padding:.5rem .8rem}
+  footer{border-top:2px solid var(--line);padding:1rem;font-size:.82rem}
+  .privacy{background:var(--green-bg);border-radius:10px;padding:.7rem .9rem;font-size:.9rem}
+  @media print{ header,.no-print{display:none} body{background:#fff} }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div>
+      <h1>🛡️ ClearCall Scam Checker</h1>
+      <p>Got a strange text, email, or letter? Paste it here <em>before</em> you reply, pay, or tap anything. ClearCall explains — in big, plain language — whether it looks like a scam and what to do next.</p>
+    </div>
+    <span class="badge">Free · Private · Nothing leaves this device</span>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="card" aria-labelledby="check-heading">
+    <h2 id="check-heading" style="margin-top:0">1 · Paste the message</h2>
+    <label for="msg">Copy the whole message exactly as you received it:</label>
+    <textarea id="msg" placeholder="Example: URGENT — your account will be suspended…"></textarea>
+    <div class="row">
+      <button id="checkBtn" type="button">✔ Check this message</button>
+      <button id="clearBtn" type="button" class="secondary">Clear</button>
+    </div>
+    <h3>Or try an example first:</h3>
+    <div class="row samples" id="samples"></div>
+  </section>
+
+  <section class="card" id="result" aria-live="polite" aria-labelledby="result-heading">
+    <h2 id="result-heading" style="margin-top:0">2 · Your result</h2>
+    <div class="verdict" id="verdictBox">
+      <div id="verdictLabel"></div>
+      <div class="score" id="scoreLine"></div>
+    </div>
+    <div class="meter" aria-hidden="true"><div id="meterFill"></div></div>
+    <p id="summary"></p>
+    <div id="flags"></div>
+    <div id="reassuring"></div>
+
+    <h3>3 · What to do next</h3>
+    <ul class="steps" id="steps"></ul>
+    <div class="row no-print toolbar">
+      <button type="button" class="secondary" id="listenBtn">🔊 Listen to this result</button>
+      <button type="button" class="secondary" id="printBtn">🖨️ Print this result to show family</button>
+      <button type="button" class="secondary" id="biggerBtn">A+ Make text bigger</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2 style="margin-top:0">The 3 rules that stop almost every scam</h2>
+    <ol class="steps">
+      <li><strong>Slow down.</strong> Urgency is the scammer's main tool. Real problems can wait an hour.</li>
+      <li><strong>Never pay with gift cards, Bitcoin, wire, or cash apps</strong> — and never share a 6-digit code. No real organisation asks for these. Ever.</li>
+      <li><strong>Use a number you already trust.</strong> Call the number on your bank card, your bill, or your family's contact card — never a number from the suspicious message.</li>
+    </ol>
+    <p class="privacy">🔒 <strong>Your privacy:</strong> ClearCall runs entirely on this page, on your device. The message you paste is never sent anywhere, saved, or shared. Close the tab and it is gone.</p>
+  </section>
+</main>
+
+<footer class="wrap">
+  <p>ClearCall is a helper, not a guarantee. If you already sent money or shared a code, call your bank immediately using the number on your card, and tell a family member or your local police non-emergency line. In the US you can also report scams at <strong>reportfraud.ftc.gov</strong>.</p>
+  <p>Build Disclosure: AI-built. Built by AI agents (Tree / Muse fleet) directed by Rene Turcios during the hackathon period; Rene set the direction and reviewed; agents designed, coded, tested, and documented. MIT License — free for anyone to use, copy, and improve.</p>
+</footer>
+
+<script src="scam-engine.js"></script>
+<script>
+  var engine = window.ScamEngine;
+  var msgEl = document.getElementById('msg');
+  var resultEl = document.getElementById('result');
+  var lastResult = null;
+
+  var samplesWrap = document.getElementById('samples');
+  Object.keys(engine.SAMPLES).forEach(function (key) {
+    var s = engine.SAMPLES[key];
+    var b = document.createElement('button');
+    b.type = 'button'; b.textContent = s.title;
+    b.addEventListener('click', function () { msgEl.value = s.text; runCheck(); });
+    samplesWrap.appendChild(b);
+  });
+
+  var STEPS = {
+    'likely-scam': [
+      'STOP. Do not reply, do not tap any link, and do not call any number in the message.',
+      'Do NOT send money, gift cards, or any code — no matter what the message threatens.',
+      'If it pretended to be your bank: call the number on the back of your bank card.',
+      'Show this result to a family member or a trusted friend before doing anything else.',
+      'Delete the message. Blocking the sender is safe too.'
+    ],
+    'caution': [
+      'Pause. Do not act on the message today if you can avoid it.',
+      'Verify independently: use the company app, the official website you type yourself, or a number from a bill or card.',
+      'Never share a code, password, or payment because a message asked you to.',
+      'Ask a family member or friend to read it with you — a second pair of eyes helps.'
+    ],
+    'low': [
+      'No need to panic — but verify anything that asks for money, codes, or personal details.',
+      'If you were not expecting it, treat it as suspicious until you have checked through a trusted channel.'
+    ],
+    'no-flags': [
+      'No action needed from this check. Keep the habit: verify first whenever money, codes, or passwords are involved.',
+      'If the message still feels wrong to you, trust that feeling and ask someone you trust.'
+    ],
+    'too-short': ['Paste the full message and check again — short fragments are hard to judge.']
+  };
+
+  function runCheck() {
+    var r = engine.analyse(msgEl.value);
+    lastResult = r;
+    resultEl.classList.add('show');
+    var box = document.getElementById('verdictBox');
+    box.className = 'verdict ' + r.verdict;
+    document.getElementById('verdictLabel').textContent = r.label;
+    document.getElementById('scoreLine').textContent = r.verdict === 'too-short' ? '' :
+      'Warning score: ' + r.score + ' out of 100 (' + r.flags.length + ' warning sign' + (r.flags.length === 1 ? '' : 's') + ' found)';
+    var fill = document.getElementById('meterFill');
+    fill.style.width = r.score + '%';
+    fill.style.background = r.score >= 45 ? '#b42318' : r.score >= 20 ? '#d48806' : '#177245';
+    document.getElementById('summary').textContent = r.summary;
+
+    var flagsHtml = '';
+    r.flags.forEach(function (f) {
+      flagsHtml += '<div class="flag"><strong>⚠ ' + f.label + '</strong><p>' + f.explain + '</p></div>';
+    });
+    document.getElementById('flags').innerHTML = flagsHtml;
+
+    var okHtml = '';
+    r.reassuring.forEach(function (n) { okHtml += '<div class="ok">✔ ' + n + '</div>'; });
+    document.getElementById('reassuring').innerHTML = okHtml;
+
+    var steps = STEPS[r.verdict] || STEPS.low;
+    document.getElementById('steps').innerHTML = steps.map(function (s) { return '<li>' + s + '</li>'; }).join('');
+    resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // Shareable demo links: ?sample=grandparent | bank | delivery | legitimate auto-runs that example.
+  (function () {
+    var key = new URLSearchParams(window.location.search).get('sample');
+    if (key && engine.SAMPLES[key]) { msgEl.value = engine.SAMPLES[key].text; runCheck(); }
+  })();
+
+  document.getElementById('checkBtn').addEventListener('click', runCheck);
+  document.getElementById('clearBtn').addEventListener('click', function () {
+    msgEl.value = ''; resultEl.classList.remove('show'); msgEl.focus();
+  });
+  document.getElementById('printBtn').addEventListener('click', function () { window.print(); });
+  document.getElementById('biggerBtn').addEventListener('click', function () { document.body.classList.toggle('large-text'); });
+  document.getElementById('listenBtn').addEventListener('click', function () {
+    if (!lastResult || !('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    var text = lastResult.label + '. ' + lastResult.summary + ' Warning signs: ' +
+      lastResult.flags.map(function (f) { return f.label; }).join('. ');
+    window.speechSynthesis.speak(new SpeechSynthesisUtterance(text));
+  });
+</script>
+</body>
+</html>
